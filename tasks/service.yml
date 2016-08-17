@@ -1,5 +1,3 @@
-- service: >
-    name=consul
-    state="{{ consul_service_state }}"
-    enabled=yes
-  when: consul_manage_service
+- service: name=consul  state=started enabled=yes
+- service: name=dnsmasq state=started enabled=yes
+

@@ -1,10 +1,11 @@
 [Unit]
-Description=Consul Agent
+Description=consul agent
 Requires=network-online.target
 After=network-online.target
 
 [Service]
 Environment="GOMAXPROCS=`nproc`"
+EnvironmentFile=-/etc/sysconfig/consul
 Restart=on-failure
 User={{ consul_user }}
 Group={{ consul_group }}

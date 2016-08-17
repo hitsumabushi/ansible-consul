@@ -1,0 +1,12 @@
+conf-dir=/etc/dnsmasq.d
+strict-order
+
+{% for interface in consul_dnsmasq.no_dhcp_interface %}
+no-dhcp-interface={{interface}}
+{% endfor %}
+
+{% for server in consul_dnsmasq.server %}
+server=/{{ server.domain }}/{{ server.address }}#{{ server.port }}
+{% endfor %}
+
+resolv-file=/etc/resolv_dnsmasq.conf

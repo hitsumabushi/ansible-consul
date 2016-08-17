@@ -3,26 +3,12 @@
   apt: >
     update_cache=yes
     cache_valid_time=3600
-  when: ansible_os_family == "Debian"
 
-- name: install deps (Ubuntu)
-  apt: >
-    pkg={{item}}
-    state=installed
+- name: install dependencies
+  apt: pkg={{item}} state=installed
   with_items:
     - unzip
     - jq
-  when: ansible_os_family == "Debian"
-
-- name: install deps (RHEL)
-  yum: >
-    pkg={{item}}
-    state=installed
-  with_items:
-    - unzip
-    - jq
-  when: ansible_os_family == "RedHat"
-
 - name: check archive stat
   stat: path={{ consul_download_folder }}/{{ consul_archive }}
   register: consul_archive_stat
@@ -64,12 +50,10 @@
     - "{{ consul_data_dir }}"
     - "{{ consul_config_dir }}"
 
-# Check before creating log dir to prevent aggressively overwriting permissions
 - name: check for consul log directory
   stat: >
-    path={{ consul_log_file|dirname }}
+    path={{ consul_log_file | dirname }}
   register: logdir
-
 - name: create log directory if it does not exist
   file: >
     state=directory
@@ -77,7 +61,6 @@
     owner={{ consul_user }}
     group={{ consul_group }}
   when: not logdir.stat.exists
-
 - name: touch the log file
   file: >
     state=touch
@@ -93,35 +76,35 @@
     copy=no
   when: consul_was_downloaded|changed
 
-- name: create TLS key
-  no_log: True
-  copy: >
-    content="{{ consul_tls_key }}"
-    dest="{{ consul_key_file }}"
-    owner={{consul_user}}
-    group={{consul_group}}
-    mode=0600
-  when: consul_tls_key is defined
-
-- name: create TLS cert
-  no_log: True
-  copy: >
-    content="{{ consul_tls_cert }}"
-    dest="{{ consul_cert_file }}"
-    owner={{consul_user}}
-    group={{consul_group}}
-    mode=0600
-  when: consul_tls_cert is defined
-
-- name: create TLS root CA cert
-  no_log: True
-  copy: >
-    content="{{ consul_tls_ca_cert }}"
-    dest="{{ consul_ca_file }}"
-    owner={{consul_user}}
-    group={{consul_group}}
-    mode=0600
-  when: consul_tls_ca_cert is defined
+  #- name: create TLS key
+  #  no_log: True
+  #  copy: >
+  #    content="{{ consul_tls_key }}"
+  #    dest="{{ consul_key_file }}"
+  #    owner={{consul_user}}
+  #    group={{consul_group}}
+  #    mode=0600
+  #  when: consul_tls_key is defined
+  #
+  #- name: create TLS cert
+  #  no_log: True
+  #  copy: >
+  #    content="{{ consul_tls_cert }}"
+  #    dest="{{ consul_cert_file }}"
+  #    owner={{consul_user}}
+  #    group={{consul_group}}
+  #    mode=0600
+  #  when: consul_tls_cert is defined
+  #
+  #- name: create TLS root CA cert
+  #  no_log: True
+  #  copy: >
+  #    content="{{ consul_tls_ca_cert }}"
+  #    dest="{{ consul_ca_file }}"
+  #    owner={{consul_user}}
+  #    group={{consul_group}}
+  #    mode=0600
+  #  when: consul_tls_ca_cert is defined
 
 - name: set ownership
   file: >
@@ -139,7 +122,6 @@
     owner=root
     group=root
     mode=0644
-  when: consul_use_upstart and ansible_os_family == "Debian"
   notify:
     - "{{ consul_restart_handler }}"
 
@@ -153,17 +135,6 @@
   when: consul_use_systemd
   notify:
     - reload systemd
-    - "{{ consul_restart_handler }}"
-
-- name: copy consul init.d script
-  template: >
-    src={{consul_initd_template}}
-    dest=/etc/init.d/consul
-    owner=root
-    group=root
-    mode=0755
-  when: consul_use_initd
-  notify:
     - "{{ consul_restart_handler }}"
 
 - name: add consul to path through profile.d
@@ -197,7 +168,7 @@
   become_user: "{{ consul_user }}"
   lineinfile: >
     dest={{ consul_home }}/.bashrc
-    insertbefore=BOF 
-    regexp='^export CONSUL_RPC_ADDR' 
-    line='export CONSUL_RPC_ADDR="{{ consul_client_address }}:{{ consul_port_rpc }}"' 
+    insertbefore=BOF
+    regexp='^export CONSUL_RPC_ADDR'
+    line='export CONSUL_RPC_ADDR="{{ consul_client_address }}:{{ consul_port_rpc }}"'
     create=yes
